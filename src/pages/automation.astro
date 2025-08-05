@@ -1,0 +1,819 @@
+---
+export const prerender = false;
+---
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AniDub AI - Automation Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .automation-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .automation-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .status-indicator { animation: pulse 2s infinite; }
+    .progress-bar { transition: width 0.3s ease; }
+    .automation-log { max-height: 300px; overflow-y: auto; }
+    .rule-card { border-left: 4px solid #667eea; }
+    .metric-card { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .job-queue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+  </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+  <!-- Header -->
+  <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <a href="/" class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+          AniDub AI
+        </a>
+        <span class="text-gray-400">•</span>
+        <h1 class="text-xl font-semibold">Automation Dashboard</h1>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-2">
+          <div class="w-3 h-3 bg-green-400 rounded-full status-indicator"></div>
+          <span class="text-sm text-gray-300">System Online</span>
+        </div>
+        <a href="/dubbing" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+          Manual Studio
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="w-80 bg-gray-800 border-r border-gray-700 p-6 overflow-y-auto">
+      <div class="space-y-6">
+        <!-- Quick Actions -->
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+          <div class="space-y-3">
+            <button id="startAutomationBtn" class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg font-medium transition-all">
+              🚀 Start Full Automation
+            </button>
+            <button id="batchUploadBtn" class="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-lg font-medium transition-all">
+              📁 Batch Upload
+            </button>
+            <button id="pauseAllBtn" class="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 rounded-lg font-medium transition-all">
+              ⏸️ Pause All Jobs
+            </button>
+            <button id="emergencyStopBtn" class="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-lg font-medium transition-all">
+              🛑 Emergency Stop
+            </button>
+          </div>
+        </div>
+
+        <!-- Automation Settings -->
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h3 class="text-lg font-semibold mb-4">Automation Level</h3>
+          <select id="automationLevel" class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white">
+            <option value="basic">Basic - Manual Review</option>
+            <option value="standard">Standard - Auto Processing</option>
+            <option value="full" selected>Full - Complete Automation</option>
+            <option value="custom">Custom - Rule-Based</option>
+          </select>
+        </div>
+
+        <!-- Resource Monitor -->
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h3 class="text-lg font-semibold mb-4">System Resources</h3>
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>CPU Usage</span>
+                <span id="cpuUsage">45%</span>
+              </div>
+              <div class="w-full bg-gray-600 rounded-full h-2">
+                <div id="cpuBar" class="bg-blue-500 h-2 rounded-full progress-bar" style="width: 45%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>Memory</span>
+                <span id="memoryUsage">62%</span>
+              </div>
+              <div class="w-full bg-gray-600 rounded-full h-2">
+                <div id="memoryBar" class="bg-green-500 h-2 rounded-full progress-bar" style="width: 62%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-sm mb-1">
+                <span>GPU Usage</span>
+                <span id="gpuUsage">78%</span>
+              </div>
+              <div class="w-full bg-gray-600 rounded-full h-2">
+                <div id="gpuBar" class="bg-purple-500 h-2 rounded-full progress-bar" style="width: 78%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 overflow-y-auto">
+      <!-- Stats Cards -->
+      <div class="automation-grid mb-8">
+        <div class="automation-card rounded-lg p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-blue-100">Active Jobs</p>
+              <p class="text-3xl font-bold" id="activeJobs">3</p>
+            </div>
+            <div class="text-4xl opacity-80">⚡</div>
+          </div>
+        </div>
+        <div class="metric-card rounded-lg p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-pink-100">Completed Today</p>
+              <p class="text-3xl font-bold" id="completedToday">12</p>
+            </div>
+            <div class="text-4xl opacity-80">✅</div>
+          </div>
+        </div>
+        <div class="job-queue rounded-lg p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-cyan-100">Queue Length</p>
+              <p class="text-3xl font-bold" id="queueLength">7</p>
+            </div>
+            <div class="text-4xl opacity-80">📋</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Dashboard Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Active Jobs -->
+        <div class="bg-gray-800 rounded-lg p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold">Active Automation Jobs</h2>
+            <button id="refreshJobsBtn" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
+              🔄 Refresh
+            </button>
+          </div>
+          <div id="activeJobsList" class="space-y-4">
+            <!-- Jobs will be populated here -->
+          </div>
+        </div>
+
+        <!-- Automation Rules -->
+        <div class="bg-gray-800 rounded-lg p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold">Automation Rules</h2>
+            <button id="addRuleBtn" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm transition-colors">
+              ➕ Add Rule
+            </button>
+          </div>
+          <div id="automationRulesList" class="space-y-3">
+            <!-- Rules will be populated here -->
+          </div>
+        </div>
+
+        <!-- Processing Queue -->
+        <div class="bg-gray-800 rounded-lg p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold">Processing Queue</h2>
+            <div class="flex space-x-2">
+              <button id="clearQueueBtn" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm transition-colors">
+                🗑️ Clear
+              </button>
+              <button id="prioritizeBtn" class="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 rounded text-sm transition-colors">
+                ⭐ Prioritize
+              </button>
+            </div>
+          </div>
+          <div id="processingQueue" class="space-y-3">
+            <!-- Queue items will be populated here -->
+          </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="bg-gray-800 rounded-lg p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold">Activity Log</h2>
+            <button id="clearLogBtn" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
+              🧹 Clear
+            </button>
+          </div>
+          <div id="activityLog" class="automation-log space-y-2 text-sm">
+            <!-- Log entries will be populated here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Metrics -->
+      <div class="mt-8 bg-gray-800 rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-6">Performance Metrics</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-blue-400" id="avgProcessingTime">4.2m</div>
+            <div class="text-gray-400">Avg Processing Time</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-green-400" id="successRate">94.8%</div>
+            <div class="text-gray-400">Success Rate</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-purple-400" id="qualityScore">8.7/10</div>
+            <div class="text-gray-400">Quality Score</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-yellow-400" id="throughput">18/hr</div>
+            <div class="text-gray-400">Throughput</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <!-- Batch Upload Modal -->
+  <div id="batchUploadModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold">Batch Upload & Automation</h3>
+          <button id="closeBatchModal" class="text-gray-400 hover:text-white">✕</button>
+        </div>
+        
+        <div class="space-y-6">
+          <!-- Upload Area -->
+          <div id="batchDropZone" class="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer">
+            <div class="text-4xl mb-4">📁</div>
+            <p class="text-lg mb-2">Drop anime files here or click to browse</p>
+            <p class="text-gray-400">Supports: MP4, MKV, AVI (Multiple files supported)</p>
+            <input type="file" id="batchFileInput" multiple accept="video/*" class="hidden">
+          </div>
+
+          <!-- Batch Settings -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Target Language</label>
+              <select id="batchTargetLanguage" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg">
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="hi">Hindi</option>
+                <option value="ta">Tamil</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Quality Preset</label>
+              <select id="batchQualityPreset" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg">
+                <option value="fast">Fast - Basic Quality</option>
+                <option value="balanced" selected>Balanced - Good Quality</option>
+                <option value="high">High - Best Quality</option>
+                <option value="ultra">Ultra - Maximum Quality</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Advanced Options -->
+          <div class="space-y-3">
+            <label class="flex items-center space-x-3">
+              <input type="checkbox" id="batchAutoCharacterDetection" checked class="form-checkbox">
+              <span>Automatic Character Detection</span>
+            </label>
+            <label class="flex items-center space-x-3">
+              <input type="checkbox" id="batchAutoVoiceAssignment" checked class="form-checkbox">
+              <span>Automatic Voice Assignment</span>
+            </label>
+            <label class="flex items-center space-x-3">
+              <input type="checkbox" id="batchGenerateSubtitles" checked class="form-checkbox">
+              <span>Generate Subtitles</span>
+            </label>
+          </div>
+
+          <div class="flex justify-end space-x-3">
+            <button id="cancelBatchUpload" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors">
+              Cancel
+            </button>
+            <button id="startBatchProcessing" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+              Start Batch Processing
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Rule Modal -->
+  <div id="addRuleModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-gray-800 rounded-lg p-6 w-full max-w-xl">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold">Add Automation Rule</h3>
+          <button id="closeRuleModal" class="text-gray-400 hover:text-white">✕</button>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-2">Rule Name</label>
+            <input type="text" id="ruleName" placeholder="e.g., Shounen Protagonist Voice" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg">
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-2">Character Gender</label>
+              <select id="ruleGender" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg">
+                <option value="">Any</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">Character Age</label>
+              <select id="ruleAge" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg">
+                <option value="">Any</option>
+                <option value="child">Child</option>
+                <option value="teen">Teen</option>
+                <option value="adult">Adult</option>
+                <option value="elderly">Elderly</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Voice Assignment</label>
+            <select id="ruleVoiceId" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg">
+              <option value="male_young_energetic">Male Young Energetic</option>
+              <option value="female_young_cute">Female Young Cute</option>
+              <option value="male_adult_calm">Male Adult Calm</option>
+              <option value="female_adult_standard">Female Adult Standard</option>
+            </select>
+          </div>
+
+          <div class="flex justify-end space-x-3">
+            <button id="cancelAddRule" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors">
+              Cancel
+            </button>
+            <button id="saveRule" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+              Save Rule
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Automation Dashboard State
+    let automationState = {
+      activeJobs: [],
+      automationRules: [],
+      processingQueue: [],
+      activityLog: [],
+      systemMetrics: {
+        cpu: 45,
+        memory: 62,
+        gpu: 78
+      },
+      isRunning: true
+    };
+
+    // Initialize Dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeAutomationDashboard();
+      loadInitialData();
+      startRealTimeUpdates();
+    });
+
+    function initializeAutomationDashboard() {
+      // Quick Action Buttons
+      document.getElementById('startAutomationBtn').addEventListener('click', startFullAutomation);
+      document.getElementById('batchUploadBtn').addEventListener('click', openBatchUploadModal);
+      document.getElementById('pauseAllBtn').addEventListener('click', pauseAllJobs);
+      document.getElementById('emergencyStopBtn').addEventListener('click', emergencyStop);
+
+      // Modal Controls
+      document.getElementById('closeBatchModal').addEventListener('click', closeBatchUploadModal);
+      document.getElementById('closeRuleModal').addEventListener('click', closeAddRuleModal);
+      document.getElementById('addRuleBtn').addEventListener('click', openAddRuleModal);
+      document.getElementById('cancelBatchUpload').addEventListener('click', closeBatchUploadModal);
+      document.getElementById('cancelAddRule').addEventListener('click', closeAddRuleModal);
+
+      // Batch Upload
+      document.getElementById('batchDropZone').addEventListener('click', () => {
+        document.getElementById('batchFileInput').click();
+      });
+      document.getElementById('batchFileInput').addEventListener('change', handleBatchFileSelection);
+      document.getElementById('startBatchProcessing').addEventListener('click', startBatchProcessing);
+
+      // Rule Management
+      document.getElementById('saveRule').addEventListener('click', saveAutomationRule);
+
+      // Refresh Controls
+      document.getElementById('refreshJobsBtn').addEventListener('click', refreshActiveJobs);
+      document.getElementById('clearLogBtn').addEventListener('click', clearActivityLog);
+    }
+
+    function loadInitialData() {
+      // Load initial automation rules
+      automationState.automationRules = [
+        {
+          id: 'shounen_protagonist',
+          name: 'Shounen Protagonist Auto-Voice',
+          conditions: { gender: 'male', age: 'teen', personality: ['energetic'] },
+          voiceId: 'male_young_energetic',
+          active: true
+        },
+        {
+          id: 'moe_heroine',
+          name: 'Moe Heroine Auto-Voice',
+          conditions: { gender: 'female', age: 'teen', personality: ['cute'] },
+          voiceId: 'female_young_cute',
+          active: true
+        },
+        {
+          id: 'wise_mentor',
+          name: 'Wise Mentor Auto-Voice',
+          conditions: { gender: 'male', age: 'adult', personality: ['wise'] },
+          voiceId: 'male_adult_calm',
+          active: true
+        }
+      ];
+
+      // Load sample active jobs
+      automationState.activeJobs = [
+        {
+          id: 'job_001',
+          title: 'Attack on Titan S04E15',
+          status: 'voice_synthesis',
+          progress: 65,
+          estimatedTime: '8 minutes',
+          automationLevel: 'full'
+        },
+        {
+          id: 'job_002',
+          title: 'Demon Slayer Movie',
+          status: 'lip_sync',
+          progress: 45,
+          estimatedTime: '12 minutes',
+          automationLevel: 'standard'
+        },
+        {
+          id: 'job_003',
+          title: 'One Piece Episode 1000',
+          status: 'character_detection',
+          progress: 25,
+          estimatedTime: '15 minutes',
+          automationLevel: 'full'
+        }
+      ];
+
+      // Load sample queue
+      automationState.processingQueue = [
+        { id: 'queue_001', title: 'Naruto Shippuden E482', priority: 'high', estimatedStart: '5 minutes' },
+        { id: 'queue_002', title: 'Jujutsu Kaisen Movie', priority: 'medium', estimatedStart: '25 minutes' },
+        { id: 'queue_003', title: 'My Hero Academia S6E12', priority: 'low', estimatedStart: '45 minutes' }
+      ];
+
+      // Initial activity log
+      addLogEntry('Automation system initialized', 'info');
+      addLogEntry('3 automation rules loaded', 'success');
+      addLogEntry('Processing queue contains 7 items', 'info');
+
+      updateUI();
+    }
+
+    function startRealTimeUpdates() {
+      // Update system metrics every 3 seconds
+      setInterval(updateSystemMetrics, 3000);
+      
+      // Update job progress every 5 seconds
+      setInterval(updateJobProgress, 5000);
+      
+      // Update stats every 10 seconds
+      setInterval(updateDashboardStats, 10000);
+    }
+
+    function updateSystemMetrics() {
+      // Simulate changing metrics
+      automationState.systemMetrics.cpu = Math.max(20, Math.min(90, automationState.systemMetrics.cpu + (Math.random() - 0.5) * 10));
+      automationState.systemMetrics.memory = Math.max(30, Math.min(85, automationState.systemMetrics.memory + (Math.random() - 0.5) * 8));
+      automationState.systemMetrics.gpu = Math.max(40, Math.min(95, automationState.systemMetrics.gpu + (Math.random() - 0.5) * 12));
+
+      document.getElementById('cpuUsage').textContent = Math.round(automationState.systemMetrics.cpu) + '%';
+      document.getElementById('cpuBar').style.width = automationState.systemMetrics.cpu + '%';
+      
+      document.getElementById('memoryUsage').textContent = Math.round(automationState.systemMetrics.memory) + '%';
+      document.getElementById('memoryBar').style.width = automationState.systemMetrics.memory + '%';
+      
+      document.getElementById('gpuUsage').textContent = Math.round(automationState.systemMetrics.gpu) + '%';
+      document.getElementById('gpuBar').style.width = automationState.systemMetrics.gpu + '%';
+    }
+
+    function updateJobProgress() {
+      automationState.activeJobs.forEach(job => {
+        if (job.progress < 100) {
+          job.progress = Math.min(100, job.progress + Math.random() * 5);
+          if (job.progress >= 100) {
+            completeJob(job);
+          }
+        }
+      });
+      updateActiveJobsDisplay();
+    }
+
+    function completeJob(job) {
+      addLogEntry(`Completed: ${job.title}`, 'success');
+      automationState.activeJobs = automationState.activeJobs.filter(j => j.id !== job.id);
+      
+      // Move next item from queue to active
+      if (automationState.processingQueue.length > 0) {
+        const nextJob = automationState.processingQueue.shift();
+        automationState.activeJobs.push({
+          id: nextJob.id,
+          title: nextJob.title,
+          status: 'video_analysis',
+          progress: 0,
+          estimatedTime: '20 minutes',
+          automationLevel: 'full'
+        });
+        addLogEntry(`Started: ${nextJob.title}`, 'info');
+      }
+      
+      updateUI();
+    }
+
+    function updateDashboardStats() {
+      // Update dashboard statistics
+      document.getElementById('activeJobs').textContent = automationState.activeJobs.length;
+      document.getElementById('queueLength').textContent = automationState.processingQueue.length;
+      document.getElementById('completedToday').textContent = Math.floor(Math.random() * 5) + 12;
+    }
+
+    function updateUI() {
+      updateActiveJobsDisplay();
+      updateAutomationRulesDisplay();
+      updateProcessingQueueDisplay();
+      updateDashboardStats();
+    }
+
+    function updateActiveJobsDisplay() {
+      const container = document.getElementById('activeJobsList');
+      container.innerHTML = '';
+
+      if (automationState.activeJobs.length === 0) {
+        container.innerHTML = '<div class="text-gray-400 text-center py-8">No active jobs</div>';
+        return;
+      }
+
+      automationState.activeJobs.forEach(job => {
+        const jobElement = document.createElement('div');
+        jobElement.className = 'bg-gray-700 rounded-lg p-4';
+        jobElement.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-medium">${job.title}</h4>
+            <span class="text-xs px-2 py-1 bg-blue-600 rounded">${job.automationLevel}</span>
+          </div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-300 capitalize">${job.status.replace('_', ' ')}</span>
+            <span class="text-sm text-gray-400">${job.estimatedTime}</span>
+          </div>
+          <div class="w-full bg-gray-600 rounded-full h-2">
+            <div class="bg-blue-500 h-2 rounded-full progress-bar" style="width: ${job.progress}%"></div>
+          </div>
+          <div class="text-xs text-gray-400 mt-1">${Math.round(job.progress)}% complete</div>
+        `;
+        container.appendChild(jobElement);
+      });
+    }
+
+    function updateAutomationRulesDisplay() {
+      const container = document.getElementById('automationRulesList');
+      container.innerHTML = '';
+
+      automationState.automationRules.forEach(rule => {
+        const ruleElement = document.createElement('div');
+        ruleElement.className = 'rule-card bg-gray-700 rounded-lg p-3';
+        ruleElement.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="font-medium text-sm">${rule.name}</h4>
+              <p class="text-xs text-gray-400">
+                ${rule.conditions.gender || 'Any'} • ${rule.conditions.age || 'Any'} • ${rule.voiceId}
+              </p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="w-2 h-2 ${rule.active ? 'bg-green-400' : 'bg-gray-500'} rounded-full"></span>
+              <button onclick="toggleRule('${rule.id}')" class="text-xs px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded">
+                ${rule.active ? 'Disable' : 'Enable'}
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(ruleElement);
+      });
+    }
+
+    function updateProcessingQueueDisplay() {
+      const container = document.getElementById('processingQueue');
+      container.innerHTML = '';
+
+      if (automationState.processingQueue.length === 0) {
+        container.innerHTML = '<div class="text-gray-400 text-center py-4">Queue is empty</div>';
+        return;
+      }
+
+      automationState.processingQueue.forEach((item, index) => {
+        const queueElement = document.createElement('div');
+        queueElement.className = 'bg-gray-700 rounded-lg p-3 flex items-center justify-between';
+        queueElement.innerHTML = `
+          <div>
+            <h4 class="font-medium text-sm">${item.title}</h4>
+            <p class="text-xs text-gray-400">Starts in: ${item.estimatedStart}</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs px-2 py-1 ${getPriorityColor(item.priority)} rounded">${item.priority}</span>
+            <span class="text-xs text-gray-400">#${index + 1}</span>
+          </div>
+        `;
+        container.appendChild(queueElement);
+      });
+    }
+
+    function getPriorityColor(priority) {
+      switch (priority) {
+        case 'high': return 'bg-red-600';
+        case 'medium': return 'bg-yellow-600';
+        case 'low': return 'bg-green-600';
+        default: return 'bg-gray-600';
+      }
+    }
+
+    function addLogEntry(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const entry = { message, type, timestamp };
+      automationState.activityLog.unshift(entry);
+      
+      // Keep only last 50 entries
+      if (automationState.activityLog.length > 50) {
+        automationState.activityLog = automationState.activityLog.slice(0, 50);
+      }
+      
+      updateActivityLogDisplay();
+    }
+
+    function updateActivityLogDisplay() {
+      const container = document.getElementById('activityLog');
+      container.innerHTML = '';
+
+      automationState.activityLog.forEach(entry => {
+        const logElement = document.createElement('div');
+        logElement.className = `flex items-center justify-between py-1 px-2 rounded ${getLogTypeColor(entry.type)}`;
+        logElement.innerHTML = `
+          <span class="text-xs">${entry.message}</span>
+          <span class="text-xs text-gray-400">${entry.timestamp}</span>
+        `;
+        container.appendChild(logElement);
+      });
+    }
+
+    function getLogTypeColor(type) {
+      switch (type) {
+        case 'success': return 'bg-green-900 bg-opacity-30';
+        case 'error': return 'bg-red-900 bg-opacity-30';
+        case 'warning': return 'bg-yellow-900 bg-opacity-30';
+        default: return 'bg-gray-700 bg-opacity-30';
+      }
+    }
+
+    // Action Functions
+    function startFullAutomation() {
+      addLogEntry('Full automation mode activated', 'success');
+      document.getElementById('automationLevel').value = 'full';
+    }
+
+    function pauseAllJobs() {
+      addLogEntry('All jobs paused', 'warning');
+      automationState.isRunning = false;
+    }
+
+    function emergencyStop() {
+      addLogEntry('EMERGENCY STOP activated - All processing halted', 'error');
+      automationState.activeJobs = [];
+      automationState.processingQueue = [];
+      automationState.isRunning = false;
+      updateUI();
+    }
+
+    function refreshActiveJobs() {
+      addLogEntry('Active jobs refreshed', 'info');
+      updateActiveJobsDisplay();
+    }
+
+    function clearActivityLog() {
+      automationState.activityLog = [];
+      updateActivityLogDisplay();
+    }
+
+    function toggleRule(ruleId) {
+      const rule = automationState.automationRules.find(r => r.id === ruleId);
+      if (rule) {
+        rule.active = !rule.active;
+        addLogEntry(`Rule "${rule.name}" ${rule.active ? 'enabled' : 'disabled'}`, 'info');
+        updateAutomationRulesDisplay();
+      }
+    }
+
+    // Modal Functions
+    function openBatchUploadModal() {
+      document.getElementById('batchUploadModal').classList.remove('hidden');
+    }
+
+    function closeBatchUploadModal() {
+      document.getElementById('batchUploadModal').classList.add('hidden');
+    }
+
+    function openAddRuleModal() {
+      document.getElementById('addRuleModal').classList.remove('hidden');
+    }
+
+    function closeAddRuleModal() {
+      document.getElementById('addRuleModal').classList.add('hidden');
+    }
+
+    function handleBatchFileSelection(event) {
+      const files = event.target.files;
+      if (files.length > 0) {
+        addLogEntry(`Selected ${files.length} files for batch processing`, 'info');
+        // Update UI to show selected files
+        const dropZone = document.getElementById('batchDropZone');
+        dropZone.innerHTML = `
+          <div class="text-4xl mb-4">📁</div>
+          <p class="text-lg mb-2">${files.length} files selected</p>
+          <p class="text-gray-400">Ready for batch processing</p>
+        `;
+      }
+    }
+
+    function startBatchProcessing() {
+      const targetLanguage = document.getElementById('batchTargetLanguage').value;
+      const qualityPreset = document.getElementById('batchQualityPreset').value;
+      
+      addLogEntry(`Started batch processing with ${targetLanguage} target language`, 'success');
+      
+      // Add items to processing queue
+      const batchItems = [
+        'Batch Item 1.mp4',
+        'Batch Item 2.mp4',
+        'Batch Item 3.mp4'
+      ];
+      
+      batchItems.forEach(item => {
+        automationState.processingQueue.push({
+          id: `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          title: item,
+          priority: 'medium',
+          estimatedStart: '2 minutes'
+        });
+      });
+      
+      updateUI();
+      closeBatchUploadModal();
+    }
+
+    function saveAutomationRule() {
+      const name = document.getElementById('ruleName').value;
+      const gender = document.getElementById('ruleGender').value;
+      const age = document.getElementById('ruleAge').value;
+      const voiceId = document.getElementById('ruleVoiceId').value;
+      
+      if (!name) {
+        alert('Please enter a rule name');
+        return;
+      }
+      
+      const newRule = {
+        id: `rule_${Date.now()}`,
+        name,
+        conditions: {
+          gender: gender || undefined,
+          age: age || undefined
+        },
+        voiceId,
+        active: true
+      };
+      
+      automationState.automationRules.push(newRule);
+      addLogEntry(`Added new automation rule: ${name}`, 'success');
+      updateAutomationRulesDisplay();
+      closeAddRuleModal();
+      
+      // Clear form
+      document.getElementById('ruleName').value = '';
+      document.getElementById('ruleGender').value = '';
+      document.getElementById('ruleAge').value = '';
+    }
+  </script>
+</body>
+</html>
