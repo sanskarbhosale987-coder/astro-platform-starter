@@ -1,7 +1,8 @@
 {
-  "name": "astro-netlify-platform-starter",
+  "name": "anidub-ai",
   "type": "module",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Advanced anime dubbing system with AI voice synthesis and multilingual translation",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -25,10 +26,22 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwindcss": "^4.0.14",
-    "unique-names-generator": "^4.7.1"
+    "unique-names-generator": "^4.7.1",
+    "axios": "^1.6.0",
+    "formidable": "^3.5.1",
+    "fluent-ffmpeg": "^2.1.2",
+    "openai": "^4.20.1",
+    "google-translate-api-x": "^10.7.1",
+    "wav": "^1.0.2",
+    "node-wav": "^0.0.2",
+    "subtitle": "^4.2.1",
+    "srt-parser-2": "^1.2.3",
+    "sharp": "^0.33.0"
   },
   "devDependencies": {
     "@types/blobshape": "^1.0.3",
-    "@types/node": "^20.12.7"
+    "@types/node": "^20.12.7",
+    "@types/fluent-ffmpeg": "^2.1.24",
+    "@types/formidable": "^3.4.5"
   }
 }
