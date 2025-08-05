@@ -1,21 +1,351 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import ContextAlert from '../components/ContextAlert.astro';
-import Markdown from '../components/Markdown.astro';
-
-const explainer = `
-An Astro website can go way beyond static pages - on the right platform.
-
-Netlify supports not only [Streaming SSR](https://docs.astro.build/en/guides/server-side-rendering/#html-streaming) and fast [Edge Middleware](https://docs.astro.build/en/guides/middleware/), but also [on-demand revalidation](https://www.netlify.com/blog/cache-tags-and-purge-api-on-netlify/) and [stale-while-revalidate](https://www.netlify.com/blog/swr-and-fine-grained-cache-control/). 
-Any page or data can be rebuilt only when needed, without site visitors ever getting a performance hit.
-`;
 ---
 
-<Layout title="Welcome to Astro.">
-    <ContextAlert class="mb-8" />
-    <h1 class="mb-10">Netlify Platform Starter for Astro</h1>
-    <Markdown content={explainer} class="mb-10 text-lg" />
-    <p>
-        <a href="https://docs.netlify.com/frameworks/astro/" class="btn btn-lg sm:min-w-64">Read the Docs</a>
-    </p>
+<Layout title="AniDub AI - Advanced Anime Dubbing System">
+  <main class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden py-20 px-4">
+      <div class="absolute inset-0 bg-black opacity-20"></div>
+      <div class="relative z-10 max-w-7xl mx-auto text-center">
+        <div class="mb-8">
+          <h1 class="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 mb-6">
+            AniDub AI
+          </h1>
+          <p class="text-2xl md:text-3xl text-white mb-8 max-w-4xl mx-auto leading-relaxed">
+            Transform any anime into perfect multilingual dubs with AI-powered voice synthesis, 
+            cultural localization, and studio-quality lip synchronization
+          </p>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
+          <button id="start-dubbing" class="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl">
+            🎬 Start Dubbing
+          </button>
+          <button id="demo-video" class="bg-transparent border-2 border-white text-white font-bold py-4 px-8 rounded-full text-xl hover:bg-white hover:text-purple-900 transition-all duration-300">
+            ▶️ Watch Demo
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto text-center">
+          <div class="text-white">
+            <div class="text-3xl font-bold text-pink-400">50+</div>
+            <div class="text-sm opacity-80">Languages</div>
+          </div>
+          <div class="text-white">
+            <div class="text-3xl font-bold text-purple-400">10k+</div>
+            <div class="text-sm opacity-80">Voice Styles</div>
+          </div>
+          <div class="text-white">
+            <div class="text-3xl font-bold text-blue-400">99%</div>
+            <div class="text-sm opacity-80">Lip Sync Accuracy</div>
+          </div>
+          <div class="text-white">
+            <div class="text-3xl font-bold text-indigo-400">24/7</div>
+            <div class="text-sm opacity-80">Processing</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 px-4 bg-gray-900 bg-opacity-50">
+      <div class="max-w-7xl mx-auto">
+        <h2 class="text-5xl font-bold text-center text-white mb-16">
+          Powered by Advanced AI Technology
+        </h2>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <!-- Translation Feature -->
+          <div class="bg-gradient-to-br from-purple-800 to-pink-800 p-8 rounded-2xl shadow-2xl hover:transform hover:scale-105 transition-all duration-300">
+            <div class="text-4xl mb-4">🌍</div>
+            <h3 class="text-2xl font-bold text-white mb-4">Cultural Translation</h3>
+            <p class="text-gray-200 mb-6">
+              Preserves anime terminology, honorifics, and cultural context while delivering natural, flowing dialogue in your target language.
+            </p>
+            <ul class="text-sm text-gray-300 space-y-2">
+              <li>✓ Anime-specific terminology preservation</li>
+              <li>✓ Emotional tone matching</li>
+              <li>✓ Regional accent support</li>
+              <li>✓ Character personality retention</li>
+            </ul>
+          </div>
+
+          <!-- Voice Synthesis Feature -->
+          <div class="bg-gradient-to-br from-blue-800 to-purple-800 p-8 rounded-2xl shadow-2xl hover:transform hover:scale-105 transition-all duration-300">
+            <div class="text-4xl mb-4">🎭</div>
+            <h3 class="text-2xl font-bold text-white mb-4">AI Voice Cloning</h3>
+            <p class="text-gray-200 mb-6">
+              Generate character-matched voices that maintain the original personality, age, gender, and emotional range of Japanese voice actors.
+            </p>
+            <ul class="text-sm text-gray-300 space-y-2">
+              <li>✓ Character voice matching</li>
+              <li>✓ Emotional expression synthesis</li>
+              <li>✓ Custom voice training</li>
+              <li>✓ Multiple voice style options</li>
+            </ul>
+          </div>
+
+          <!-- Lip Sync Feature -->
+          <div class="bg-gradient-to-br from-indigo-800 to-blue-800 p-8 rounded-2xl shadow-2xl hover:transform hover:scale-105 transition-all duration-300">
+            <div class="text-4xl mb-4">👄</div>
+            <h3 class="text-2xl font-bold text-white mb-4">Perfect Lip Sync</h3>
+            <p class="text-gray-200 mb-6">
+              Advanced phoneme analysis and mouth movement synchronization for seamless visual-audio alignment.
+            </p>
+            <ul class="text-sm text-gray-300 space-y-2">
+              <li>✓ Frame-accurate synchronization</li>
+              <li>✓ Phoneme-based mouth shapes</li>
+              <li>✓ Natural movement transitions</li>
+              <li>✓ Ultra-precision mode</li>
+            </ul>
+          </div>
+
+          <!-- Audio Processing Feature -->
+          <div class="bg-gradient-to-br from-green-800 to-teal-800 p-8 rounded-2xl shadow-2xl hover:transform hover:scale-105 transition-all duration-300">
+            <div class="text-4xl mb-4">🎵</div>
+            <h3 class="text-2xl font-bold text-white mb-4">Studio Quality Audio</h3>
+            <p class="text-gray-200 mb-6">
+              Professional-grade audio processing with noise reduction, mixing, and mastering for broadcast-ready output.
+            </p>
+            <ul class="text-sm text-gray-300 space-y-2">
+              <li>✓ Advanced noise reduction</li>
+              <li>✓ Multi-track mixing</li>
+              <li>✓ Dynamic range optimization</li>
+              <li>✓ Format conversion support</li>
+            </ul>
+          </div>
+
+          <!-- Batch Processing Feature -->
+          <div class="bg-gradient-to-br from-orange-800 to-red-800 p-8 rounded-2xl shadow-2xl hover:transform hover:scale-105 transition-all duration-300">
+            <div class="text-4xl mb-4">⚡</div>
+            <h3 class="text-2xl font-bold text-white mb-4">Batch Processing</h3>
+            <p class="text-gray-200 mb-6">
+              Process entire anime seasons simultaneously with automated queue management and progress tracking.
+            </p>
+            <ul class="text-sm text-gray-300 space-y-2">
+              <li>✓ Multi-episode processing</li>
+              <li>✓ Progress monitoring</li>
+              <li>✓ Quality consistency</li>
+              <li>✓ Automated workflows</li>
+            </ul>
+          </div>
+
+          <!-- Customization Feature -->
+          <div class="bg-gradient-to-br from-pink-800 to-purple-800 p-8 rounded-2xl shadow-2xl hover:transform hover:scale-105 transition-all duration-300">
+            <div class="text-4xl mb-4">🎨</div>
+            <h3 class="text-2xl font-bold text-white mb-4">Full Customization</h3>
+            <p class="text-gray-200 mb-6">
+              Complete control over voice styles, emotion intensity, sync accuracy, and output quality settings.
+            </p>
+            <ul class="text-sm text-gray-300 space-y-2">
+              <li>✓ Voice style selection</li>
+              <li>✓ Emotion intensity control</li>
+              <li>✓ Quality presets</li>
+              <li>✓ Real-time preview</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Supported Languages Section -->
+    <section class="py-20 px-4">
+      <div class="max-w-7xl mx-auto text-center">
+        <h2 class="text-5xl font-bold text-white mb-16">
+          Dub Into Any Language
+        </h2>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-12">
+          <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-4 hover:bg-opacity-20 transition-all duration-300">
+            <div class="text-2xl mb-2">🇺🇸</div>
+            <div class="text-white font-semibold">English</div>
+          </div>
+          <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-4 hover:bg-opacity-20 transition-all duration-300">
+            <div class="text-2xl mb-2">🇮🇳</div>
+            <div class="text-white font-semibold">Hindi</div>
+          </div>
+          <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-4 hover:bg-opacity-20 transition-all duration-300">
+            <div class="text-2xl mb-2">🇮🇳</div>
+            <div class="text-white font-semibold">Tamil</div>
+          </div>
+          <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-4 hover:bg-opacity-20 transition-all duration-300">
+            <div class="text-2xl mb-2">🇪🇸</div>
+            <div class="text-white font-semibold">Spanish</div>
+          </div>
+          <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-4 hover:bg-opacity-20 transition-all duration-300">
+            <div class="text-2xl mb-2">🇫🇷</div>
+            <div class="text-white font-semibold">French</div>
+          </div>
+          <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-4 hover:bg-opacity-20 transition-all duration-300">
+            <div class="text-2xl mb-2">🇩🇪</div>
+            <div class="text-white font-semibold">German</div>
+          </div>
+          <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-4 hover:bg-opacity-20 transition-all duration-300">
+            <div class="text-2xl mb-2">🇮🇹</div>
+            <div class="text-white font-semibold">Italian</div>
+          </div>
+          <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-4 hover:bg-opacity-20 transition-all duration-300">
+            <div class="text-2xl mb-2">🇵🇹</div>
+            <div class="text-white font-semibold">Portuguese</div>
+          </div>
+          <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-4 hover:bg-opacity-20 transition-all duration-300">
+            <div class="text-2xl mb-2">🇷🇺</div>
+            <div class="text-white font-semibold">Russian</div>
+          </div>
+          <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-4 hover:bg-opacity-20 transition-all duration-300">
+            <div class="text-2xl mb-2">🇨🇳</div>
+            <div class="text-white font-semibold">Chinese</div>
+          </div>
+          <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-4 hover:bg-opacity-20 transition-all duration-300">
+            <div class="text-2xl mb-2">🇰🇷</div>
+            <div class="text-white font-semibold">Korean</div>
+          </div>
+          <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-4 hover:bg-opacity-20 transition-all duration-300">
+            <div class="text-2xl mb-2">🇸🇦</div>
+            <div class="text-white font-semibold">Arabic</div>
+          </div>
+        </div>
+
+        <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+          Support for 50+ languages with regional accent variations. 
+          Each language maintains cultural authenticity while preserving the original anime's emotional impact.
+        </p>
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="py-20 px-4 bg-gray-900 bg-opacity-50">
+      <div class="max-w-7xl mx-auto">
+        <h2 class="text-5xl font-bold text-center text-white mb-16">
+          How AniDub AI Works
+        </h2>
+        
+        <div class="grid md:grid-cols-4 gap-8">
+          <div class="text-center">
+            <div class="bg-gradient-to-br from-purple-600 to-pink-600 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto mb-6">1</div>
+            <h3 class="text-xl font-bold text-white mb-4">Upload Content</h3>
+            <p class="text-gray-300">
+              Upload your anime video file or provide a streaming URL. Supports all major formats.
+            </p>
+          </div>
+          
+          <div class="text-center">
+            <div class="bg-gradient-to-br from-blue-600 to-purple-600 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto mb-6">2</div>
+            <h3 class="text-xl font-bold text-white mb-4">AI Analysis</h3>
+            <p class="text-gray-300">
+              Our AI analyzes dialogue, identifies characters, and extracts emotional context for accurate translation.
+            </p>
+          </div>
+          
+          <div class="text-center">
+            <div class="bg-gradient-to-br from-indigo-600 to-blue-600 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto mb-6">3</div>
+            <h3 class="text-xl font-bold text-white mb-4">Voice Synthesis</h3>
+            <p class="text-gray-300">
+              Generate character-matched voices with perfect emotional expression and cultural adaptation.
+            </p>
+          </div>
+          
+          <div class="text-center">
+            <div class="bg-gradient-to-br from-green-600 to-teal-600 w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto mb-6">4</div>
+            <h3 class="text-xl font-bold text-white mb-4">Perfect Output</h3>
+            <p class="text-gray-300">
+              Download your studio-quality dubbed anime with perfect lip sync and professional audio mixing.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 px-4 text-center">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-5xl font-bold text-white mb-8">
+          Ready to Transform Your Anime?
+        </h2>
+        <p class="text-xl text-gray-300 mb-12">
+          Join thousands of anime fans and creators who trust AniDub AI for professional-quality dubbing.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+          <button id="get-started" class="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-4 px-12 rounded-full text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl">
+            Get Started Free
+          </button>
+          <button id="contact-sales" class="bg-transparent border-2 border-white text-white font-bold py-4 px-12 rounded-full text-xl hover:bg-white hover:text-purple-900 transition-all duration-300">
+            Contact Sales
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
 </Layout>
+
+<script>
+  // Add interactive functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const startDubbingBtn = document.getElementById('start-dubbing');
+    const demoVideoBtn = document.getElementById('demo-video');
+    const getStartedBtn = document.getElementById('get-started');
+    const contactSalesBtn = document.getElementById('contact-sales');
+
+    // Navigate to dubbing interface
+    startDubbingBtn?.addEventListener('click', () => {
+      window.location.href = '/dubbing';
+    });
+
+    getStartedBtn?.addEventListener('click', () => {
+      window.location.href = '/dubbing';
+    });
+
+    // Demo video modal (placeholder)
+    demoVideoBtn?.addEventListener('click', () => {
+      alert('Demo video would open here. This would show a before/after comparison of anime dubbing.');
+    });
+
+    // Contact sales (placeholder)
+    contactSalesBtn?.addEventListener('click', () => {
+      alert('Contact sales form would open here for enterprise inquiries.');
+    });
+
+    // Add some visual effects
+    const cards = document.querySelectorAll('.hover\\:transform');
+    cards.forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        card.style.transform = 'scale(1.05) rotateY(5deg)';
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'scale(1) rotateY(0deg)';
+      });
+    });
+  });
+</script>
+
+<style>
+  /* Custom animations and effects */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  /* Glassmorphism effect */
+  .backdrop-blur-lg {
+    backdrop-filter: blur(16px);
+  }
+  
+  /* Gradient text animation */
+  @keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  .bg-gradient-to-r {
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+  }
+</style>
