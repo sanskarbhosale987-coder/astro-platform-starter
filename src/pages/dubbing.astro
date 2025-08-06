@@ -408,6 +408,7 @@ import Layout from '../layouts/Layout.astro';
       }
 
       currentProject.videoFile = file;
+      currentProject.videoKey = null; // Will be set after upload
       const videoUrl = URL.createObjectURL(file);
       
       mainVideo.src = videoUrl;
@@ -656,6 +657,7 @@ import Layout from '../layouts/Layout.astro';
 
         if (result.success) {
           currentJobId = result.data.jobId;
+          currentProject.videoKey = result.data.videoKey; // Store video key
           showProcessingStatus();
           startProgressMonitoring();
           

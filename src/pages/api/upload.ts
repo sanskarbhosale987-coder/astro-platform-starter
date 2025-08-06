@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getStore } from '@netlify/blobs';
 import formidable from 'formidable';
+import fs from 'fs';
 import { BatchProcessingService } from '../../services/BatchProcessingService';
 import { TranslationService } from '../../services/TranslationService';
 import { VoiceSynthesisService } from '../../services/VoiceSynthesisService';

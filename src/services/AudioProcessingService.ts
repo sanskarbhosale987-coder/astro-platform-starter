@@ -583,6 +583,169 @@ export class AudioProcessingService {
       console.error('Cleanup failed:', error);
     }
   }
+
+  /**
+   * Extract audio from video buffer
+   */
+  async extractAudio(videoBuffer: Buffer): Promise<Buffer> {
+    try {
+      const tempVideoPath = path.join(this.tempDir, `temp_video_${Date.now()}.mp4`);
+      const tempAudioPath = path.join(this.tempDir, `extracted_audio_${Date.now()}.wav`);
+      
+      // Write video buffer to temp file
+      fs.writeFileSync(tempVideoPath, videoBuffer);
+      
+      // Extract audio using FFmpeg
+      await new Promise<void>((resolve, reject) => {
+        ffmpeg(tempVideoPath)
+          .audioCodec('pcm_s16le')
+          .audioFrequency(this.audioConfig.sampleRate)
+          .audioChannels(this.audioConfig.channels)
+          .format('wav')
+          .output(tempAudioPath)
+          .on('end', () => resolve())
+          .on('error', (err) => reject(err))
+          .run();
+      });
+
+      // Read audio buffer
+      const audioBuffer = fs.readFileSync(tempAudioPath);
+      
+      // Cleanup temp files
+      fs.unlinkSync(tempVideoPath);
+      fs.unlinkSync(tempAudioPath);
+      
+      return audioBuffer;
+    } catch (error) {
+      console.error('Audio extraction failed:', error);
+      throw new Error('Failed to extract audio from video');
+    }
+  }
+
+  /**
+   * Mix audio tracks with new signature for dubbed audio
+   */
+  async mixAudioTracks(params: {
+    originalAudio: Buffer;
+    dubbedAudio: any[];
+    outputFormat: string;
+  }): Promise<Buffer> {
+    try {
+      const tempOriginalPath = path.join(this.tempDir, `original_${Date.now()}.wav`);
+      const tempDubbedPath = path.join(this.tempDir, `dubbed_${Date.now()}.wav`);
+      const outputPath = path.join(this.tempDir, `mixed_${Date.now()}.${params.outputFormat}`);
+      
+      // Write original audio to temp file
+      fs.writeFileSync(tempOriginalPath, params.originalAudio);
+      
+      // For demo purposes, we'll create a simple mixed audio
+      // In production, you would process each dubbed audio segment
+      const mixedAudio = await this.createMixedAudio(params.dubbedAudio);
+      fs.writeFileSync(tempDubbedPath, mixedAudio);
+      
+      // Mix original and dubbed audio
+      await new Promise<void>((resolve, reject) => {
+        ffmpeg()
+          .input(tempOriginalPath)
+          .input(tempDubbedPath)
+          .complexFilter([
+            '[0:a]volume=0.3[original]',
+            '[1:a]volume=0.7[dubbed]',
+            '[original][dubbed]amix=inputs=2:duration=longest[mixed]'
+          ])
+          .output('[mixed]')
+          .output(outputPath)
+          .on('end', () => resolve())
+          .on('error', (err) => reject(err))
+          .run();
+      });
+
+      // Read mixed audio buffer
+      const mixedBuffer = fs.readFileSync(outputPath);
+      
+      // Cleanup temp files
+      fs.unlinkSync(tempOriginalPath);
+      fs.unlinkSync(tempDubbedPath);
+      fs.unlinkSync(outputPath);
+      
+      return mixedBuffer;
+    } catch (error) {
+      console.error('Audio mixing failed:', error);
+      throw new Error('Failed to mix audio tracks');
+    }
+  }
+
+  /**
+   * Create mixed audio from dubbed segments
+   */
+  private async createMixedAudio(dubbedSegments: any[]): Promise<Buffer> {
+    // For demo purposes, create a simple audio buffer
+    // In production, you would concatenate all dubbed audio segments
+    const sampleRate = 44100;
+    const duration = 15; // 15 seconds
+    const samples = sampleRate * duration;
+    
+    // Create a simple sine wave as placeholder
+    const audioBuffer = Buffer.alloc(samples * 2); // 16-bit samples
+    
+    for (let i = 0; i < samples; i++) {
+      const sample = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.3; // A4 note
+      const intSample = Math.floor(sample * 32767);
+      audioBuffer.writeInt16LE(intSample, i * 2);
+    }
+    
+    return audioBuffer;
+  }
+
+  /**
+   * Create final dubbed video
+   */
+  async createDubbedVideo(params: {
+    originalVideo: Buffer;
+    dubbedAudio: Buffer;
+    outputFormat: string;
+    quality: string;
+  }): Promise<Buffer> {
+    try {
+      const tempVideoPath = path.join(this.tempDir, `original_video_${Date.now()}.mp4`);
+      const tempAudioPath = path.join(this.tempDir, `dubbed_audio_${Date.now()}.wav`);
+      const outputPath = path.join(this.tempDir, `dubbed_video_${Date.now()}.${params.outputFormat}`);
+      
+      // Write buffers to temp files
+      fs.writeFileSync(tempVideoPath, params.originalVideo);
+      fs.writeFileSync(tempAudioPath, params.dubbedAudio);
+      
+      // Create dubbed video by replacing audio track
+      await new Promise<void>((resolve, reject) => {
+        const command = ffmpeg(tempVideoPath)
+          .input(tempAudioPath)
+          .outputOptions([
+            '-map 0:v', // Use video from first input
+            '-map 1:a', // Use audio from second input
+            '-c:v copy', // Copy video codec
+            '-c:a aac', // Use AAC for audio
+            '-b:a 128k' // Audio bitrate
+          ])
+          .output(outputPath)
+          .on('end', () => resolve())
+          .on('error', (err) => reject(err))
+          .run();
+      });
+
+      // Read dubbed video buffer
+      const dubbedVideoBuffer = fs.readFileSync(outputPath);
+      
+      // Cleanup temp files
+      fs.unlinkSync(tempVideoPath);
+      fs.unlinkSync(tempAudioPath);
+      fs.unlinkSync(outputPath);
+      
+      return dubbedVideoBuffer;
+    } catch (error) {
+      console.error('Dubbed video creation failed:', error);
+      throw new Error('Failed to create dubbed video');
+    }
+  }
 }
 
 // Supporting interfaces
