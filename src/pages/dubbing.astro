@@ -619,21 +619,362 @@ import Layout from '../layouts/Layout.astro';
       return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
+    // Automated workflow functionality
+    let currentJobId = null;
+    let processingInterval = null;
+
+    // Upload and start processing
+    document.getElementById('start-processing')?.addEventListener('click', async () => {
+      if (!currentProject.videoFile) {
+        alert('Please upload a video file first.');
+        return;
+      }
+
+      const startButton = document.getElementById('start-processing');
+      startButton.disabled = true;
+      startButton.textContent = '🚀 Processing...';
+
+      try {
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('video', currentProject.videoFile);
+        formData.append('targetLanguage', document.getElementById('target-language').value);
+        formData.append('voiceStyle', document.getElementById('voice-style')?.value || 'standard');
+        formData.append('emotionIntensity', getEmotionLevel());
+        formData.append('lipSyncAccuracy', document.getElementById('lip-sync-accuracy').value);
+        formData.append('subtitlesEnabled', document.getElementById('enable-subtitles').checked);
+        formData.append('regionalAccent', document.getElementById('regional-accent').value);
+        formData.append('qualityPreset', document.getElementById('quality-preset').value);
+
+        // Upload video and start processing
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          currentJobId = result.data.jobId;
+          showProcessingStatus();
+          startProgressMonitoring();
+          
+          // Start analysis
+          await startAnalysis();
+        } else {
+          alert(`Upload failed: ${result.error}`);
+          resetStartButton();
+        }
+      } catch (error) {
+        console.error('Processing error:', error);
+        alert('Failed to start processing. Please try again.');
+        resetStartButton();
+      }
+    });
+
+    // Start analysis
+    async function startAnalysis() {
+      try {
+        const response = await fetch('/api/analysis', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            videoKey: currentProject.videoKey,
+            jobId: currentJobId
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          updateCharacterList(result.data.characters);
+          updateProgress(25, 'Analysis completed');
+        } else {
+          console.error('Analysis failed:', result.error);
+        }
+      } catch (error) {
+        console.error('Analysis error:', error);
+      }
+    }
+
+    // Monitor processing progress
+    function startProgressMonitoring() {
+      processingInterval = setInterval(async () => {
+        try {
+          const response = await fetch(`/api/upload?jobId=${currentJobId}`);
+          const result = await response.json();
+          
+          if (result.success) {
+            updateProgressFromJob(result.data);
+          }
+        } catch (error) {
+          console.error('Progress monitoring error:', error);
+        }
+      }, 2000);
+    }
+
+    // Update progress from job status
+    function updateProgressFromJob(jobStatus) {
+      const progress = jobStatus.overallProgress || 0;
+      const currentTask = jobStatus.currentTask || 'Processing...';
+      
+      updateProgress(progress, currentTask);
+      
+      if (jobStatus.status === 'completed') {
+        clearInterval(processingInterval);
+        showCompletionStatus();
+        performQualityControl();
+      } else if (jobStatus.status === 'error') {
+        clearInterval(processingInterval);
+        showErrorStatus(jobStatus.error);
+      }
+    }
+
+    // Show processing status
+    function showProcessingStatus() {
+      const statusElement = document.getElementById('processing-status');
+      statusElement.classList.remove('hidden');
+      
+      updateProgress(0, 'Starting processing...');
+    }
+
+    // Update progress
+    function updateProgress(percentage, currentTask) {
+      const progressBar = document.getElementById('overall-progress');
+      const percentageText = document.getElementById('overall-percentage');
+      const currentStage = document.getElementById('current-stage');
+      
+      progressBar.style.width = `${percentage}%`;
+      percentageText.textContent = `${percentage}%`;
+      currentStage.textContent = currentTask;
+      
+      // Update stage indicators
+      updateStageIndicators(percentage);
+    }
+
+    // Update stage indicators
+    function updateStageIndicators(percentage) {
+      const stages = ['upload', 'analysis', 'translation', 'synthesis', 'finalization'];
+      const stageElements = stages.map(stage => document.getElementById(`stage-${stage}`));
+      
+      const stageIndex = Math.floor(percentage / 20);
+      
+      stageElements.forEach((element, index) => {
+        if (index < stageIndex) {
+          element.className = 'w-8 h-8 rounded-full bg-green-500 mx-auto mb-1 flex items-center justify-center text-xs';
+        } else if (index === stageIndex) {
+          element.className = 'w-8 h-8 rounded-full bg-purple-500 mx-auto mb-1 flex items-center justify-center text-xs';
+        } else {
+          element.className = 'w-8 h-8 rounded-full bg-gray-600 mx-auto mb-1 flex items-center justify-center text-xs';
+        }
+      });
+    }
+
+    // Show completion status
+    function showCompletionStatus() {
+      updateProgress(100, 'Processing completed!');
+      
+      // Enable download button
+      const exportButton = document.getElementById('export-video');
+      exportButton.disabled = false;
+      exportButton.textContent = '📥 Download Dubbed Video';
+      
+      // Show success message
+      showNotification('✅ Processing completed successfully!', 'success');
+    }
+
+    // Perform quality control
+    async function performQualityControl() {
+      try {
+        const response = await fetch('/api/quality-control', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            jobId: currentJobId,
+            videoKey: currentProject.videoKey,
+            dubbedVideoKey: `dubbed_${currentJobId}`
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          showQualityReport(result.data);
+        }
+      } catch (error) {
+        console.error('Quality control error:', error);
+      }
+    }
+
+    // Show quality report
+    function showQualityReport(report) {
+      const qualityModal = createQualityModal(report);
+      document.body.appendChild(qualityModal);
+    }
+
+    // Create quality modal
+    function createQualityModal(report) {
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+      modal.innerHTML = `
+        <div class="bg-gray-800 rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-white">Quality Control Report</h3>
+            <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-white">✕</button>
+          </div>
+          
+          <div class="mb-4">
+            <div class="flex items-center space-x-2 mb-2">
+              <span class="text-white">Overall Score:</span>
+              <span class="text-2xl font-bold ${report.passed ? 'text-green-400' : 'text-yellow-400'}">${Math.round(report.overallScore * 100)}%</span>
+              <span class="px-2 py-1 rounded text-xs ${report.passed ? 'bg-green-600' : 'bg-yellow-600'} text-white">${report.passed ? 'PASSED' : 'NEEDS REVIEW'}</span>
+            </div>
+          </div>
+          
+          <div class="space-y-3 mb-4">
+            ${report.checks.map(check => `
+              <div class="bg-gray-700 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-white font-medium">${check.name}</span>
+                  <span class="text-sm ${check.status === 'pass' ? 'text-green-400' : check.status === 'warning' ? 'text-yellow-400' : 'text-red-400'}">${Math.round(check.score * 100)}%</span>
+                </div>
+                <div class="w-full bg-gray-600 rounded-full h-2">
+                  <div class="bg-gradient-to-r from-pink-500 to-purple-600 h-2 rounded-full" style="width: ${check.score * 100}%"></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          ${report.recommendations.length > 0 ? `
+            <div class="mb-4">
+              <h4 class="text-white font-medium mb-2">Recommendations:</h4>
+              <div class="space-y-2">
+                ${report.recommendations.map(rec => `
+                  <div class="bg-gray-700 rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="text-white text-sm">${rec.description}</span>
+                      <span class="px-2 py-1 rounded text-xs ${rec.priority === 'high' ? 'bg-red-600' : rec.priority === 'medium' ? 'bg-yellow-600' : 'bg-blue-600'} text-white">${rec.priority.toUpperCase()}</span>
+                    </div>
+                    <div class="text-gray-400 text-xs">Estimated effort: ${rec.estimatedEffort}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      
+      return modal;
+    }
+
     // Export functionality
-    document.getElementById('export-video')?.addEventListener('click', () => {
-      if (!currentProject.processing && currentProject.videoFile) {
-        alert('Export functionality would download the dubbed video file.');
-      } else {
+    document.getElementById('export-video')?.addEventListener('click', async () => {
+      if (!currentJobId) {
         alert('Please complete the dubbing process first.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/download', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            jobId: currentJobId,
+            includeSubtitles: true,
+            format: 'mp4'
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          // Create download link
+          const downloadLink = document.createElement('a');
+          downloadLink.href = result.data.downloadUrl;
+          downloadLink.download = result.data.filename;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          
+          showNotification('📥 Download started!', 'success');
+        } else {
+          alert(`Download failed: ${result.error}`);
+        }
+      } catch (error) {
+        console.error('Download error:', error);
+        alert('Failed to download video. Please try again.');
       }
     });
 
     // Save project
     document.getElementById('save-project')?.addEventListener('click', () => {
-      const projectData = JSON.stringify(currentProject);
+      const projectData = JSON.stringify({
+        ...currentProject,
+        jobId: currentJobId
+      });
       localStorage.setItem('anidub_project', projectData);
-      alert('Project saved successfully!');
+      showNotification('💾 Project saved successfully!', 'success');
     });
+
+    // Helper functions
+    function getEmotionLevel() {
+      const intensity = document.getElementById('emotion-intensity').value;
+      const levels = ['low', 'medium', 'high', 'ultra'];
+      return levels[parseInt(intensity) - 1];
+    }
+
+    function resetStartButton() {
+      const startButton = document.getElementById('start-processing');
+      startButton.disabled = false;
+      startButton.textContent = '🚀 Start Dubbing Process';
+    }
+
+    function showErrorStatus(error) {
+      updateProgress(0, `Error: ${error}`);
+      showNotification(`❌ Processing failed: ${error}`, 'error');
+      resetStartButton();
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 p-4 rounded-lg text-white z-50 ${
+        type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+      }`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 5000);
+    }
+
+    function updateCharacterList(characters) {
+      const characterList = document.getElementById('character-list');
+      
+      if (characters && characters.length > 0) {
+        characterList.innerHTML = characters.map(char => `
+          <div class="bg-white bg-opacity-10 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-white font-semibold">${char.name}</span>
+              <span class="text-purple-400 text-sm">${char.voiceStyle}</span>
+            </div>
+            <div class="text-gray-400 text-sm mb-2">${char.personality.join(', ')}</div>
+            <div class="flex items-center space-x-1">
+              <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded">${char.gender}</span>
+              <span class="bg-green-600 text-white text-xs px-2 py-1 rounded">${char.age}</span>
+              <span class="bg-purple-600 text-white text-xs px-2 py-1 rounded">${char.voiceId}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
   });
 </script>
 
